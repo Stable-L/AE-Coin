@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DECIMALS = 6;
 
   const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT TRC20
-  const TREASURY = "TTZyeQR1fBpmhn2Y4Pcrj2Nw3WpioRtScU";       // Wallet Treasury
+  const TREASURY = "TTZyeQR1fBpmhn2Y4Pcrj2Nw3WpioRtScU";       // Wallet Anda
   const RATE_USDT = 0.272; // 1 AEC = 1 AED ≈ 0.272 USDT
 
   let tronWeb, user;
@@ -38,25 +38,18 @@ document.addEventListener("DOMContentLoaded", () => {
       loadBalance();
     } catch (err) {
       alert("TronLink / Trust Wallet not detected!");
-      console.error(err);
     }
   }
 
   /* -------- LOAD AEC BALANCE -------- */
   async function loadBalance() {
     try {
-      if (!tronWeb || !user) {
-        document.getElementById("aecBalance").innerText = "Connect wallet first";
-        return;
-      }
-
       const contract = await tronWeb.contract().at(CONTRACT);
       const bal = await contract.balanceOf(user).call();
-
       document.getElementById("aecBalance").innerText =
-        (bal / (10 ** DECIMALS)).toLocaleString(undefined, {minimumFractionDigits: 2});
+        bal / (10 ** DECIMALS);
     } catch (err) {
-      console.error("Load balance error:", err);
+      console.error(err);
       document.getElementById("aecBalance").innerText = "Error";
     }
   }
@@ -108,13 +101,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const usdt = await tronWeb.contract().at(USDT_CONTRACT);
 
-      // Transfer USDT ke Treasury
+      // Transfer USDT ke treasury
       await usdt.transfer(TREASURY, tronWeb.toSun(totalUSDT)).send();
 
       document.getElementById("buyStatus").innerText =
         "✅ Purchase successful! USDT sent to treasury.";
 
-      // Optional: Load balance AEC jika token dikirim otomatis
+      // Optional: Load balance AEC (jika token dikirim otomatis)
       loadBalance();
 
     } catch (err) {
