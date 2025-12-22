@@ -123,3 +123,4 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("year").innerText = new Date().getFullYear();
 
 });
+<script src="app.js"></script>
