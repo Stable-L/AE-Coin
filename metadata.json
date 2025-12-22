@@ -1,0 +1,9 @@
+{
+  "name": "AE Coin",
+  "symbol": "AEC",
+  "decimals": 6,
+  "network": "TRON",
+  "standard": "TRC20",
+  "contract": "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL",
+  "description": "AE Coin is a UAE-inspired TRC20 digital asset focused on trust, stability, and Web3 integration."
+}
