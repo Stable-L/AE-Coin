@@ -169,10 +169,39 @@
 
 <script src="app.js"></script>
   
-  <audio id="bgMusic" loop>
+ <!-- Background Music -->
+<audio
+  id="bgMusic"
+  autoplay
+  muted
+  loop
+  preload="auto">
   <source src="cyberpunk.mp3" type="audio/mpeg">
 </audio>
-  
+  <script>
+  const music = document.getElementById("bgMusic");
+  music.volume = 0.25; // volume sedang
+
+  function toggleMusic() {
+    music.muted = !music.muted;
+    document.getElementById("musicBtn").innerText =
+      music.muted ? "🔇" : "🔊";
+  }
+</script>
+<button
+  id="musicBtn"
+  onclick="toggleMusic()"
+  style="
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    z-index:999;
+    font-size:22px;
+  ">
+  🔇
+</button>
+
 </body>
 </html>
+
 
