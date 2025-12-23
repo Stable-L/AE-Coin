@@ -231,3 +231,14 @@ window.addEventListener("load", () => {
   loadCryptoNews();
 });
 
+const music = document.getElementById("bgMusic");
+
+function toggleMusic() {
+  if (music.paused) {
+    music.volume = 0.25;
+    music.play();
+  } else {
+    music.pause();
+  }
+}
+
