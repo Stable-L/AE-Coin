@@ -313,3 +313,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+async function loadCryptoNews() {
+  try {
+    const res = await fetch(
+      "https://api.rss2json.com/v1/api.json?rss_url=https://www.coindesk.com/arc/outboundfeeds/rss/"
+    );
+    const data = await res.json();
+
+    const container = document.getElementById("newsContainer");
+    container.innerHTML = "";
+
+    data.items.slice(0, 6).forEach(item => {
+      container.innerHTML += `
+        <div class="news-card">
+          <h4>${item.title}</h4>
+          <a href="${item.link}" target="_blank">Read more →</a>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    console.error("News error:", err);
+    document.getElementById("newsContainer").innerText =
+      "Failed to load crypto news";
+  }
+}
+
+/* LOAD SAAT PAGE DIBUKA */
+loadCryptoNews();
+
+/* AUTO REFRESH SETIAP 5 MENIT */
+setInterval(loadCryptoNews, 300000);
+
