@@ -190,3 +190,43 @@ loadTopCoinsTicker();
 /* REFRESH SETIAP 2 MENIT (AMAN API) */
 setInterval(loadTopCoinsTicker, 120000);
 
+/* -------- CRYPTO NEWS -------- */
+const CRYPTO_PANIC_KEY = "ISI_API_KEY_KAMU";
+
+async function loadCryptoNews() {
+  const container = document.getElementById("newsContainer");
+  if (!container) return;
+
+  try {
+    const res = await fetch(
+      `https://cryptopanic.com/api/v1/posts/?auth_token=${CRYPTO_PANIC_KEY}&public=true`
+    );
+
+    const data = await res.json();
+    container.innerHTML = "";
+
+    data.results.slice(0, 6).forEach(item => {
+      const img =
+        item.thumbnail ||
+        "https://cryptopanic.com/static/images/news_placeholder.png";
+
+      container.innerHTML += `
+        <div class="card">
+          <img src="${img}" style="width:100%;border-radius:12px">
+          <h4 style="margin-top:10px">${item.title}</h4>
+          <a href="${item.url}" target="_blank" class="btn btn-outline" style="margin-top:8px;display:inline-block">
+            Read More
+          </a>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    console.error("Crypto news error:", err);
+    container.innerHTML = "Failed to load crypto news";
+  }
+}
+
+window.addEventListener("load", () => {
+  loadCryptoNews();
+});
