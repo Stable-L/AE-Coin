@@ -232,28 +232,46 @@ window.addEventListener("load", () => {
 });
 
 /* ===========================
-   BACKGROUND MUSIC
+   BACKGROUND MUSIC (FIXED)
 =========================== */
 
 document.addEventListener("DOMContentLoaded", () => {
   const music = document.getElementById("bgMusic");
   const btn = document.getElementById("musicBtn");
 
-  if (!music || !btn) return;
+  if (!music || !btn) {
+    console.warn("Music element not found");
+    return;
+  }
 
-  // volume sedang
+  // setting awal
   music.volume = 0.25;
+  music.muted = true;
 
-  // status icon awal
-  btn.innerText = music.muted ? "🔇" : "🔊";
+  // 🔥 PAKSA PLAY (muted = boleh oleh browser)
+  const tryPlay = () => {
+    music.play().then(() => {
+      console.log("Music autoplay success");
+    }).catch(err => {
+      console.warn("Autoplay blocked, waiting user interaction");
+    });
+  };
 
-  // toggle mute / unmute (BUKAN pause)
+  tryPlay();
+
+  // toggle mute / unmute
+  btn.innerText = "🔇";
   btn.addEventListener("click", () => {
     music.muted = !music.muted;
     btn.innerText = music.muted ? "🔇" : "🔊";
+
+    // pastikan play saat unmute
+    if (!music.muted && music.paused) {
+      music.play().catch(() => {});
+    }
   });
 
-  // fallback autoplay (jika diblok browser)
+  // fallback keras: klik apa saja di body
   document.body.addEventListener(
     "click",
     () => {
@@ -264,6 +282,3 @@ document.addEventListener("DOMContentLoaded", () => {
     { once: true }
   );
 });
-
-
-
