@@ -191,7 +191,7 @@ loadTopCoinsTicker();
 setInterval(loadTopCoinsTicker, 120000);
 
 /* -------- CRYPTO NEWS -------- */
-const CRYPTO_PANIC_KEY = "ISI_API_KEY_KAMU";
+const CRYPTO_PANIC_KEY = "4ac30ccdd5191b14583c96f41499d04698bb57e8";
 
 async function loadCryptoNews() {
   const container = document.getElementById("newsContainer");
@@ -230,3 +230,4 @@ async function loadCryptoNews() {
 window.addEventListener("load", () => {
   loadCryptoNews();
 });
+
