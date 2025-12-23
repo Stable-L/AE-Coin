@@ -282,3 +282,34 @@ document.addEventListener("DOMContentLoaded", () => {
     { once: true }
   );
 });
+document.addEventListener("DOMContentLoaded", () => {
+  const music = document.getElementById("bgMusic");
+  const gate = document.getElementById("soundGate");
+  const btn = document.getElementById("musicBtn");
+
+  if (!music) return;
+
+  music.volume = 0.25;
+  music.muted = true;
+
+  // play muted (izin browser)
+  music.play().catch(() => {});
+
+  // enable sound setelah klik
+  if (gate) {
+    gate.addEventListener("click", () => {
+      music.muted = false;
+      music.play().catch(() => {});
+      gate.remove();
+      if (btn) btn.innerText = "🔊";
+    });
+  }
+
+  if (btn) {
+    btn.addEventListener("click", () => {
+      music.muted = !music.muted;
+      btn.innerText = music.muted ? "🔇" : "🔊";
+    });
+  }
+});
+
