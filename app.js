@@ -231,14 +231,39 @@ window.addEventListener("load", () => {
   loadCryptoNews();
 });
 
-const music = document.getElementById("bgMusic");
+/* ===========================
+   BACKGROUND MUSIC
+=========================== */
 
-function toggleMusic() {
-  if (music.paused) {
-    music.volume = 0.25;
-    music.play();
-  } else {
-    music.pause();
-  }
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const music = document.getElementById("bgMusic");
+  const btn = document.getElementById("musicBtn");
+
+  if (!music || !btn) return;
+
+  // volume sedang
+  music.volume = 0.25;
+
+  // status icon awal
+  btn.innerText = music.muted ? "🔇" : "🔊";
+
+  // toggle mute / unmute (BUKAN pause)
+  btn.addEventListener("click", () => {
+    music.muted = !music.muted;
+    btn.innerText = music.muted ? "🔇" : "🔊";
+  });
+
+  // fallback autoplay (jika diblok browser)
+  document.body.addEventListener(
+    "click",
+    () => {
+      if (music.paused) {
+        music.play().catch(() => {});
+      }
+    },
+    { once: true }
+  );
+});
+
+
 
