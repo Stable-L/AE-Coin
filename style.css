@@ -40,7 +40,7 @@ body{
   display:inline-flex;
   gap:32px;
   padding-left:100%;
-  animation:scroll 40s linear infinite
+  animation:scroll 150s linear infinite
 }
 .ticker-item{display:flex;gap:8px;align-items:center;font-size:14px}
 .ticker-item img{width:18px;height:18px;border-radius:50%}
@@ -177,5 +177,6 @@ input{
   margin: auto;
   text-align: center;
 }
+
 
 
