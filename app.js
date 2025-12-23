@@ -125,3 +125,42 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("year").innerText = new Date().getFullYear();
 
 });
+
+/* =========================================
+   COINGECKO TOP 100 ALTCOIN TICKER
+   ========================================= */
+
+async function loadTopCoinsTicker() {
+  try {
+    const res = await fetch(
+      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
+    );
+
+    const coins = await res.json();
+    const ticker = document.getElementById("tickerContent");
+
+    ticker.innerHTML = ""; // kosongkan dulu
+
+    coins.forEach(c => {
+      const item = document.createElement("div");
+      item.className = "ticker-item";
+      item.innerHTML = `
+        <img src="${c.image}" alt="${c.symbol}">
+        ${c.symbol.toUpperCase()}
+        <span>$${c.current_price.toLocaleString()}</span>
+      `;
+      ticker.appendChild(item);
+    });
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("tickerContent").innerText =
+      "Failed to load market data";
+  }
+}
+
+/* LOAD SAAT PAGE DIBUKA */
+loadTopCoinsTicker();
+
+/* REFRESH SETIAP 2 MENIT (AMAN API) */
+setInterval(loadTopCoinsTicker, 120000);
