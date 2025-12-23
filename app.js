@@ -28,33 +28,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* -------- CONNECT WALLET -------- */
   async function connectWallet() {
-    try {
-      tronWeb = await waitForTronWeb();
-      user = tronWeb.defaultAddress.base58;
+  try {
+    tronWeb = await waitForTronWeb();
 
-      document.getElementById("walletStatus").innerText = "Connected";
-      document.getElementById("walletAddress").innerText = user;
+    // 🔐 MINTA IZIN WALLET (PENTING!)
+    await tronWeb.request({ method: "tron_requestAccounts" });
 
-      loadBalance();
-    } catch (err) {
-      alert("TronLink / Trust Wallet not detected!");
-      console.error(err);
-    }
+    // 📌 AMBIL ADDRESS SETELAH DISETUJUI
+    user = tronWeb.defaultAddress.base58;
+
+    document.getElementById("walletStatus").innerText = "Connected";
+    document.getElementById("walletAddress").innerText = user;
+
+    // 🔄 LOAD SALDO AEC
+    loadBalance();
+
+  } catch (err) {
+    console.error(err);
+    alert("Wallet connection failed");
   }
+}
 
-  /* -------- LOAD AEC BALANCE -------- */
-  async function loadBalance() {
-    try {
-      if(!tronWeb || !user) return;
-      const contract = await tronWeb.contract().at(CONTRACT);
-      const bal = await contract.balanceOf(user).call();
-      document.getElementById("aecBalance").innerText =
-        (bal / (10 ** DECIMALS)).toLocaleString();
-    } catch (err) {
-      console.error(err);
-      document.getElementById("aecBalance").innerText = "Error";
+  /* -------- LOAD AEC BALANCE (FIXED) -------- */
+async function loadBalance() {
+  const balanceEl = document.getElementById("aecBalance");
+  if (!balanceEl) return;
+
+  try {
+    // Pastikan TronLink siap
+    if (!window.tronWeb || !tronWeb.ready) {
+      balanceEl.innerText = "Connect wallet";
+      return;
     }
+
+    const address = tronWeb.defaultAddress.base58;
+    if (!address) {
+      balanceEl.innerText = "Connect wallet";
+      return;
+    }
+
+    const contract = await tronWeb.contract().at(CONTRACT);
+
+    // balanceOf biasanya string / BigNumber
+    const bal = await contract.balanceOf(address).call();
+    const amount = Number(bal) / Math.pow(10, DECIMALS);
+
+    balanceEl.innerText = amount.toLocaleString("en-US") + " AEC";
+
+  } catch (err) {
+    console.error("Load balance error:", err);
+    balanceEl.innerText = "Error";
   }
+}
 
   /* -------- SEND AEC TOKEN -------- */
   async function sendToken() {
@@ -164,3 +189,4 @@ loadTopCoinsTicker();
 
 /* REFRESH SETIAP 2 MENIT (AMAN API) */
 setInterval(loadTopCoinsTicker, 120000);
+
