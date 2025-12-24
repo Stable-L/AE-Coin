@@ -202,5 +202,24 @@ input{
   text-decoration: none;
 }
 
+#swapBtn {
+  background: linear-gradient(135deg,#ffd700,#d4af37);
+  color:#0b0f14;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:.4px;
+  box-shadow:0 8px 28px rgba(212,175,55,.45);
+  transition:all .25s ease;
+}
+
+#swapBtn:hover {
+  transform: translateY(-2px);
+  box-shadow:0 12px 38px rgba(212,175,55,.75);
+}
+
+#swapBtn:active {
+  transform: scale(.98);
+}
+
 
 
