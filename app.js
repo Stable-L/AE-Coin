@@ -38,16 +38,17 @@ let userAddress = null;
 
   const year           = document.getElementById("year");
 
-  /* ================= WALLET HELPERS ================= */
+ /* ================= WALLET ================= */
+
   async function waitTronLink() {
     return new Promise((resolve, reject) => {
-      let tries = 0;
+      let t = 0;
       const timer = setInterval(() => {
         if (window.tronWeb && window.tronWeb.ready) {
           clearInterval(timer);
           resolve(window.tronWeb);
         }
-        if (++tries > 20) {
+        if (++t > 20) {
           clearInterval(timer);
           reject();
         }
@@ -55,15 +56,6 @@ let userAddress = null;
     });
   }
 
-  function requireWallet() {
-    if (!tronWeb || !userAddress) {
-      alert("Connect wallet first");
-      return false;
-    }
-    return true;
-  }
-
-  /* ================= CONNECT ================= */
   async function connectWallet() {
     try {
       tronWeb = await waitTronLink();
@@ -77,14 +69,13 @@ let userAddress = null;
       connectBtn.style.display = "none";
       disconnectBtn.style.display = "inline-block";
 
-      loadBalance();
+      loadAECBalance();
 
     } catch {
-      alert("Please open with TronLink wallet");
+      alert("Open this site using TronLink wallet");
     }
   }
 
-  /* ================= DISCONNECT (UI) ================= */
   function disconnectWallet() {
     tronWeb = null;
     userAddress = null;
@@ -97,20 +88,18 @@ let userAddress = null;
     disconnectBtn.style.display = "none";
   }
 
-  /* ================= AUTO DISCONNECT ================= */
   if (window.tronWeb && window.tronWeb.on) {
-    window.tronWeb.on("addressChanged", () => {
-      disconnectWallet();
-    });
+    window.tronWeb.on("addressChanged", disconnectWallet);
   }
 
-  /* ================= LOAD BALANCE ================= */
-  async function loadBalance() {
-    if (!requireWallet()) return;
+  /* ================= BALANCE ================= */
+
+  async function loadAECBalance() {
+    if (!tronWeb || !userAddress) return;
 
     try {
-      const contract = await tronWeb.contract().at(AEC_CONTRACT);
-      const bal = await contract.balanceOf(userAddress).call();
+      const token = await tronWeb.contract().at(AEC_CONTRACT);
+      const bal = await token.balanceOf(userAddress).call();
       aecBalance.innerText =
         (Number(bal) / 10 ** DECIMALS).toLocaleString() + " AEC";
     } catch {
@@ -118,82 +107,84 @@ let userAddress = null;
     }
   }
 
-  /* ================= PRICE ESTIMATE ================= */
+  /* ================= ESTIMATE (V3) ================= */
+
   async function estimateSwap() {
     if (!tronWeb) return;
 
     const amount = Number(swapFromAmount.value);
-    if (amount <= 0) {
+    if (!amount || amount <= 0) {
       swapToAmount.value = "";
       return;
     }
 
     try {
-      const router = await tronWeb.contract().at(SUNSWAP_ROUTER);
+      const quoter = await tronWeb.contract().at(QUOTER_V3);
 
-      const path =
-        swapFromToken.value === "USDT"
-          ? [USDT_CONTRACT, AEC_CONTRACT]
-          : [AEC_CONTRACT, USDT_CONTRACT];
+      const fromToken =
+        swapFromToken.value === "USDT" ? USDT_CONTRACT : AEC_CONTRACT;
+      const toToken =
+        swapFromToken.value === "USDT" ? AEC_CONTRACT : USDT_CONTRACT;
 
-      const amountIn =
-        swapFromToken.value === "USDT"
-          ? amount * 1e6
-          : amount * 10 ** DECIMALS;
+      const amountIn = Math.floor(amount * 1e6);
 
-      const result = await router
-        .getAmountsOut(amountIn, path)
-        .call();
+      const quoted = await quoter.quoteExactInputSingle(
+        fromToken,
+        toToken,
+        FEE_TIER,
+        amountIn,
+        0
+      ).call();
 
-      const out =
-        swapToToken.value === "USDT"
-          ? result[1] / 1e6
-          : result[1] / 10 ** DECIMALS;
+      swapToAmount.value =
+        (quoted.amountOut / 1e6).toFixed(6);
 
-      swapToAmount.value = out.toFixed(6);
-
-    } catch {
-      swapToAmount.value = "";
+    } catch (err) {
+      console.error("Quote error:", err);
+      swapToAmount.value = "—";
     }
   }
 
-  /* ================= SWAP ================= */
+  /* ================= SWAP (V3) ================= */
+
   async function swap() {
-    if (!requireWallet()) return;
+    if (!tronWeb || !userAddress) {
+      alert("Connect wallet first");
+      return;
+    }
 
     const amount = Number(swapFromAmount.value);
-    if (amount <= 0) return;
+    if (!amount || amount <= 0) return;
 
     try {
       swapStatus.innerText = "Approving...";
 
       const fromUSDT = swapFromToken.value === "USDT";
-      const amountIn = fromUSDT
-        ? amount * 1e6
-        : amount * 10 ** DECIMALS;
+      const tokenIn  = fromUSDT ? USDT_CONTRACT : AEC_CONTRACT;
+      const tokenOut = fromUSDT ? AEC_CONTRACT : USDT_CONTRACT;
 
-      const tokenIn = fromUSDT ? USDT_CONTRACT : AEC_CONTRACT;
-      const path = fromUSDT
-        ? [USDT_CONTRACT, AEC_CONTRACT]
-        : [AEC_CONTRACT, USDT_CONTRACT];
+      const amountIn = Math.floor(amount * 1e6);
 
       const token = await tronWeb.contract().at(tokenIn);
-      const router = await tronWeb.contract().at(SUNSWAP_ROUTER);
+      const router = await tronWeb.contract().at(SWAP_ROUTER_V3);
 
-      await token.approve(SUNSWAP_ROUTER, amountIn).send();
+      await token.approve(SWAP_ROUTER_V3, amountIn).send();
 
       swapStatus.innerText = "Swapping...";
 
-      await router.swapExactTokensForTokens(
+      await router.exactInputSingle({
+        tokenIn,
+        tokenOut,
+        fee: FEE_TIER,
+        recipient: userAddress,
+        deadline: Math.floor(Date.now() / 1000) + 600,
         amountIn,
-        0,
-        path,
-        userAddress,
-        Math.floor(Date.now() / 1000) + 600
-      ).send();
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0
+      }).send();
 
       swapStatus.innerText = "✅ Swap successful";
-      loadBalance();
+      loadAECBalance();
 
     } catch (err) {
       console.error(err);
@@ -495,6 +486,7 @@ document.getElementById("swapBtn").onclick = async () => {
       "❌ Swap failed or cancelled";
   }
 };
+
 
 
 
