@@ -59,7 +59,12 @@
     AE Coin (AEC) is a TRC20 digital asset inspired by the economic strength and trust of the United Arab Emirates.
   </p>
   <button id="connectBtn" class="btn btn-primary">Connect Wallet</button>
-  <p id="walletStatus" class="muted">Not connected</p>
+<button id="disconnectBtn" class="btn btn-outline" style="display:none">
+  Disconnect
+</button>
+
+<p id="walletStatus" class="muted">Not connected</p>
+
 </section>
 
 <section id="about" class="section">
@@ -109,6 +114,9 @@
 <section id="swap" class="section">
   <div class="card" style="max-width:460px;margin:auto">
     <h2>Swap AE Coin</h2>
+    <p id="priceInfo" style="font-size:13px;color:#d4af37">
+  1 AEC ≈ 1 DIRHAM ≈ Loading USDT...
+</p>
     <p style="color:#9aa4b2;font-size:14px">
       Powered by SunSwap · Real-time price
     </p>
@@ -236,6 +244,7 @@
 
 </body>
 </html>
+
 
 
 
