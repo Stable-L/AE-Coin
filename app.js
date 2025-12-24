@@ -194,18 +194,63 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /* ================= EVENTS ================= */
-  connectBtn.onclick    = connectWallet;
-  disconnectBtn.onclick = disconnectWallet;
-  swapBtn.onclick       = swap;
+   /* ========= SEND AEC TOKEN ========= */
+async function sendToken() {
+  if (!tronWeb || !userAddress) {
+    alert("Connect wallet first");
+    return;
+  }
 
-  swapFromAmount.oninput = estimateSwap;
-  swapFromToken.onchange = estimateSwap;
-  swapToToken.onchange   = estimateSwap;
+  const to = document.getElementById("sendTo").value.trim();
+  const amount = Number(document.getElementById("sendAmount").value);
 
-  year.innerText = new Date().getFullYear();
+  if (!tronWeb.isAddress(to)) {
+    alert("Invalid recipient address");
+    return;
+  }
 
-});
+  if (amount <= 0) {
+    alert("Invalid amount");
+    return;
+  }
+
+  try {
+    const contract = await tronWeb.contract().at(AEC_CONTRACT);
+    const value = Math.floor(amount * 10 ** DECIMALS);
+
+    document.getElementById("txStatus").innerText =
+      "Confirm transaction in TronLink...";
+
+    await contract.transfer(to, value).send();
+
+    document.getElementById("txStatus").innerText =
+      "✅ Transfer successful";
+
+    // refresh balance
+    loadAECBalance();
+
+    // clear input
+    document.getElementById("sendAmount").value = "";
+    document.getElementById("sendTo").value = "";
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("txStatus").innerText =
+      "❌ Transaction cancelled or failed";
+  }
+}
+   
+/* ===== EVENTS ===== */
+connectBtn.onclick = connectWallet;
+disconnectBtn.onclick = disconnectWallet;
+sendBtn.onclick = sendToken;
+swapBtn.onclick = swap;
+
+swapFromAmount.oninput = estimateSwap;
+swapFromToken.onchange = estimateSwap;
+swapToToken.onchange = estimateSwap;
+
+year.innerText = new Date().getFullYear();
 
 
 /* =========================================
@@ -441,6 +486,7 @@ document.getElementById("swapBtn").onclick = async () => {
       "❌ Swap failed or cancelled";
   }
 };
+
 
 
 
