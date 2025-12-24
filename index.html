@@ -33,7 +33,7 @@
   <a href="#about">About</a>
   <a href="#token">Token Information</a>
   <a href="#wallet">Your Wallet</a>
-  <a href="#buy">Buy AE Coin</a>
+  <a href="#swap">Swap AE Coin</a>
   <a href="#roadmap">Roadmap</a>
   <a href="#news">Crypto News</a>
 </nav>
@@ -106,20 +106,36 @@
   </div>
 </section>
 
-<section id="buy" class="section">
-  <h2>Buy AE Coin (AEC)</h2>
+<section id="swap" class="section">
+  <div class="card" style="max-width:460px;margin:auto">
+    <h2>Swap AE Coin</h2>
+    <p style="color:#9aa4b2;font-size:14px">
+      Powered by SunSwap · Real-time price
+    </p>
 
-  <div class="card">
-    <p><strong>Rate:</strong> 1 AEC = 1 AED ≈ <strong>0.272 USDT</strong></p>
+    <!-- FROM -->
+    <label>You pay</label>
+    <input id="swapFromAmount" type="number" placeholder="0.0">
 
-    <input id="buyAmount" placeholder="Amount AEC" type="number">
-    <p>You pay: <strong><span id="usdtAmount">0</span> USDT</strong></p>
+    <select id="swapFromToken">
+      <option value="USDT">USDT</option>
+      <option value="AEC">AEC</option>
+    </select>
 
-    <button id="buyBtn" class="btn btn-primary">
-      Buy with USDT (TRC20)
+    <!-- TO -->
+    <label>You receive (estimated)</label>
+    <input id="swapToAmount" type="text" disabled placeholder="0.0">
+
+    <select id="swapToToken">
+      <option value="AEC">AEC</option>
+      <option value="USDT">USDT</option>
+    </select>
+
+    <button id="swapBtn" class="btn btn-primary" style="width:100%;margin-top:12px">
+      Swap via SunSwap
     </button>
 
-    <p id="buyStatus" class="muted"></p>
+    <p id="swapStatus" style="margin-top:10px;font-size:14px"></p>
   </div>
 </section>
 
@@ -220,6 +236,7 @@
 
 </body>
 </html>
+
 
 
 
