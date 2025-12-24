@@ -1,12 +1,13 @@
 /* =========================================
-   AE Coin (AEC) — SunSwap Buy (FINAL CLEAN)
+   AE Coin (AEC) — SunSwap Buy
+   TRONLINK ONLY (FINAL CLEAN)
 ========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
 
   /* ========= CONFIG ========= */
-  const AEC_CONTRACT  = "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL";
-  const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT TRC20
+  const AEC_CONTRACT   = "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL";
+  const USDT_CONTRACT  = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
   const SUNSWAP_ROUTER = "TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax";
 
   const DECIMALS = 6;
@@ -15,35 +16,28 @@ document.addEventListener("DOMContentLoaded", () => {
   let tronWeb;
   let userAddress;
 
-  /* ========= WALLET DETECT ========= */
-  async function waitForTronWeb() {
-    return new Promise((resolve, reject) => {
-      let count = 0;
-      const timer = setInterval(() => {
-        if (window.tronWeb && window.tronWeb.defaultAddress.base58) {
-          clearInterval(timer);
-          resolve(window.tronWeb);
-        }
-        if (++count > 20) {
-          clearInterval(timer);
-          reject("Wallet not detected");
-        }
-      }, 500);
-    });
-  }
-
-  /* ========= CONNECT WALLET ========= */
+  /* ========= CONNECT TRONLINK ========= */
   async function connectWallet() {
+    if (!window.tronWeb || !window.tronWeb.isTronLink) {
+      alert("Please install and open with TronLink Wallet");
+      return;
+    }
+
     try {
-      tronWeb = await waitForTronWeb();
+      await window.tronWeb.request({
+        method: "tron_requestAccounts"
+      });
+
+      tronWeb = window.tronWeb;
       userAddress = tronWeb.defaultAddress.base58;
 
-      document.getElementById("walletStatus").innerText = "Connected";
+      document.getElementById("walletStatus").innerText = "Connected (TronLink)";
       document.getElementById("walletAddress").innerText = userAddress;
 
       loadAECBalance();
-    } catch {
-      alert("Please open with TronLink / Trust Wallet / OKX");
+
+    } catch (err) {
+      alert("Connection rejected in TronLink");
     }
   }
 
@@ -52,14 +46,16 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const contract = await tronWeb.contract().at(AEC_CONTRACT);
       const bal = await contract.balanceOf(userAddress).call();
+
       document.getElementById("aecBalance").innerText =
         (Number(bal) / 10 ** DECIMALS).toLocaleString() + " AEC";
+
     } catch {
       document.getElementById("aecBalance").innerText = "-";
     }
   }
 
-  /* ========= UI PRICE CALC ========= */
+  /* ========= UI PRICE ========= */
   document.getElementById("buyAmount").addEventListener("input", e => {
     const aec = Number(e.target.value || 0);
     document.getElementById("usdtAmount").innerText =
@@ -69,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ========= BUY VIA SUNSWAP ========= */
   document.getElementById("buyBtn").onclick = async () => {
     if (!tronWeb || !userAddress) {
-      alert("Connect wallet first");
+      alert("Connect TronLink first");
       return;
     }
 
@@ -80,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const usdtAmount = aec * UI_RATE_USDT;
       const amountIn = tronWeb.toSun(usdtAmount);
 
-      const usdt = await tronWeb.contract().at(USDT_CONTRACT);
+      const usdt   = await tronWeb.contract().at(USDT_CONTRACT);
       const router = await tronWeb.contract().at(SUNSWAP_ROUTER);
 
       document.getElementById("buyStatus").innerText = "Approving USDT...";
@@ -104,10 +100,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  /* ========= AUTO DETECT IF ALREADY CONNECTED ========= */
+  setTimeout(() => {
+    if (window.tronWeb && window.tronWeb.isTronLink && window.tronWeb.ready) {
+      tronWeb = window.tronWeb;
+      userAddress = tronWeb.defaultAddress.base58;
+      document.getElementById("walletStatus").innerText = "Connected (TronLink)";
+      document.getElementById("walletAddress").innerText = userAddress;
+      loadAECBalance();
+    }
+  }, 500);
+
   /* ========= INIT ========= */
   document.getElementById("connectBtn").onclick = connectWallet;
   document.getElementById("year").innerText = new Date().getFullYear();
 });
+
 
 
 
@@ -264,6 +272,7 @@ loadCryptoNews();
 
 /* AUTO REFRESH SETIAP 5 MENIT */
 setInterval(loadCryptoNews, 300000);
+
 
 
 
