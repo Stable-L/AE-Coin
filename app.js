@@ -1,115 +1,114 @@
 /* =========================================
-   AE Coin (AEC) — Web3 Wallet & Buy USDT
+   AE Coin (AEC) — SunSwap Buy (FINAL CLEAN)
 ========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  /* -------- CONFIG -------- */
-  const CONTRACT = "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL";
-  const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-  const TREASURY = "TTZyeQR1fBpmhn2Y4Pcrj2Nw3WpioRtScU";
+  /* ========= CONFIG ========= */
+  const AEC_CONTRACT  = "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL";
+  const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT TRC20
+  const SUNSWAP_ROUTER = "TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax";
+
   const DECIMALS = 6;
-  const RATE_USDT = 0.272;
+  const UI_RATE_USDT = 0.272; // hanya tampilan
 
   let tronWeb;
-  let user;
+  let userAddress;
 
-  /* -------- WAIT TRONLINK -------- */
+  /* ========= WALLET DETECT ========= */
   async function waitForTronWeb() {
     return new Promise((resolve, reject) => {
-      let i = 0;
+      let count = 0;
       const timer = setInterval(() => {
-        if (window.tronWeb && window.tronWeb.ready) {
+        if (window.tronWeb && window.tronWeb.defaultAddress.base58) {
           clearInterval(timer);
           resolve(window.tronWeb);
         }
-        if (++i > 20) {
+        if (++count > 20) {
           clearInterval(timer);
-          reject();
+          reject("Wallet not detected");
         }
-      }, 300);
+      }, 500);
     });
   }
 
-  /* -------- CONNECT WALLET -------- */
+  /* ========= CONNECT WALLET ========= */
   async function connectWallet() {
     try {
       tronWeb = await waitForTronWeb();
-      await tronWeb.request({ method: "tron_requestAccounts" });
-
-      user = tronWeb.defaultAddress.base58;
+      userAddress = tronWeb.defaultAddress.base58;
 
       document.getElementById("walletStatus").innerText = "Connected";
-      document.getElementById("walletAddress").innerText = user;
+      document.getElementById("walletAddress").innerText = userAddress;
 
-      loadBalance();
+      loadAECBalance();
     } catch {
-      alert("Wallet connection failed");
+      alert("Please open with TronLink / Trust Wallet / OKX");
     }
   }
 
-  /* -------- LOAD AEC BALANCE -------- */
-  async function loadBalance() {
+  /* ========= LOAD AEC BALANCE ========= */
+  async function loadAECBalance() {
     try {
-      const contract = await tronWeb.contract().at(CONTRACT);
-      const bal = await contract.balanceOf(user).call();
-      const amount = Number(bal) / 10 ** DECIMALS;
-
+      const contract = await tronWeb.contract().at(AEC_CONTRACT);
+      const bal = await contract.balanceOf(userAddress).call();
       document.getElementById("aecBalance").innerText =
-        amount.toLocaleString() + " AEC";
+        (Number(bal) / 10 ** DECIMALS).toLocaleString() + " AEC";
     } catch {
       document.getElementById("aecBalance").innerText = "-";
     }
   }
 
-  /* -------- SEND AEC -------- */
-  async function sendToken() {
-    const to = document.getElementById("sendTo").value.trim();
-    const amt = Number(document.getElementById("sendAmount").value);
-
-    if (!to || amt <= 0) return alert("Invalid input");
-
-    try {
-      const contract = await tronWeb.contract().at(CONTRACT);
-      await contract.transfer(to, amt * 10 ** DECIMALS).send();
-
-      document.getElementById("txStatus").innerText = "✅ Sent";
-      loadBalance();
-    } catch {
-      document.getElementById("txStatus").innerText = "❌ Failed";
-    }
-  }
-
-  /* -------- BUY (UI + TRANSFER USDT) -------- */
-  document.getElementById("buyAmount").addEventListener("input", () => {
-    const aec = Number(buyAmount.value || 0);
-    usdtAmount.innerText = (aec * RATE_USDT).toFixed(6);
+  /* ========= UI PRICE CALC ========= */
+  document.getElementById("buyAmount").addEventListener("input", e => {
+    const aec = Number(e.target.value || 0);
+    document.getElementById("usdtAmount").innerText =
+      (aec * UI_RATE_USDT).toFixed(6);
   });
 
+  /* ========= BUY VIA SUNSWAP ========= */
   document.getElementById("buyBtn").onclick = async () => {
-    if (!tronWeb || !user) return alert("Connect wallet first");
+    if (!tronWeb || !userAddress) {
+      alert("Connect wallet first");
+      return;
+    }
 
-    const aec = Number(buyAmount.value);
+    const aec = Number(document.getElementById("buyAmount").value);
     if (aec <= 0) return;
 
     try {
+      const usdtAmount = aec * UI_RATE_USDT;
+      const amountIn = tronWeb.toSun(usdtAmount);
+
       const usdt = await tronWeb.contract().at(USDT_CONTRACT);
-      const total = Math.round(aec * RATE_USDT * 1e6);
+      const router = await tronWeb.contract().at(SUNSWAP_ROUTER);
 
-      document.getElementById("buyStatus").innerText = "Processing...";
-      await usdt.transfer(TREASURY, total).send();
+      document.getElementById("buyStatus").innerText = "Approving USDT...";
+      await usdt.approve(SUNSWAP_ROUTER, amountIn).send();
 
-      document.getElementById("buyStatus").innerText = "✅ USDT sent";
-    } catch {
-      document.getElementById("buyStatus").innerText = "❌ Failed";
+      document.getElementById("buyStatus").innerText = "Swapping via SunSwap...";
+      await router.swapExactTokensForTokens(
+        amountIn,
+        0,
+        [USDT_CONTRACT, AEC_CONTRACT],
+        userAddress,
+        Math.floor(Date.now() / 1000) + 600
+      ).send();
+
+      document.getElementById("buyStatus").innerText = "✅ Swap successful";
+      loadAECBalance();
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById("buyStatus").innerText = "❌ Transaction failed";
     }
   };
 
-  /* -------- INIT -------- */
-  connectBtn.onclick = connectWallet;
-  sendBtn.onclick = sendToken;
-  year.innerText = new Date().getFullYear();
+  /* ========= INIT ========= */
+  document.getElementById("connectBtn").onclick = connectWallet;
+  document.getElementById("year").innerText = new Date().getFullYear();
 });
+
 
 
 /* =========================================
@@ -265,6 +264,7 @@ loadCryptoNews();
 
 /* AUTO REFRESH SETIAP 5 MENIT */
 setInterval(loadCryptoNews, 300000);
+
 
 
 
