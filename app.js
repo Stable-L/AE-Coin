@@ -112,28 +112,6 @@ async function loadBalance() {
       (aec * RATE_USDT).toFixed(6);
   });
 
-  document.getElementById("buyBtn").onclick = async () => {
-    if (!tronWeb || !user) {
-      alert("Connect wallet first");
-      return;
-    }
-
-    const aec = Number(document.getElementById("buyAmount").value);
-    if (aec <= 0) return alert("Invalid amount");
-
-    const totalUSDT = aec * RATE_USDT;
-
-    try {
-      document.getElementById("buyStatus").innerText = "Waiting for confirmation...";
-
-      const usdt = await tronWeb.contract().at(USDT_CONTRACT);
-
-      // TRC20 USDT = 6 decimals
-      await usdt.transfer(TREASURY, Math.round(totalUSDT * 1e6)).send();
-
-      document.getElementById("buyStatus").innerText =
-        "✅ Purchase successful! USDT sent to treasury.";
-
       // Optional: Load balance AEC
       loadBalance();
 
@@ -452,3 +430,4 @@ document.getElementById("buyBtn").onclick = async () => {
     document.getElementById("buyStatus").innerText = "❌ Transaction failed";
   }
 };
+
