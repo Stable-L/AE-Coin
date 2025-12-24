@@ -273,6 +273,85 @@ loadCryptoNews();
 setInterval(loadCryptoNews, 300000);
 
 
+/* ========= SUNSWAP SWAP BOX ========= */
+
+const SUNSWAP_ROUTER = "TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax";
+const USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+const AEC  = "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL";
+
+async function getAmountsOut(amountIn, path) {
+  const router = await tronWeb.contract().at(SUNSWAP_ROUTER);
+  return await router.getAmountsOut(amountIn, path).call();
+}
+
+document.getElementById("swapFromAmount").addEventListener("input", async () => {
+  if (!tronWeb || !userAddress) return;
+
+  const amt = Number(document.getElementById("swapFromAmount").value);
+  if (amt <= 0) return;
+
+  const from = document.getElementById("swapFromToken").value;
+  const to   = document.getElementById("swapToToken").value;
+
+  const path =
+    from === "USDT" ? [USDT, AEC] : [AEC, USDT];
+
+  const decimals = from === "USDT" ? 6 : 6;
+  const amountIn = Math.floor(amt * 10 ** decimals);
+
+  try {
+    const amounts = await getAmountsOut(amountIn, path);
+    const out = amounts[1] / 10 ** decimals;
+    document.getElementById("swapToAmount").value =
+      out.toFixed(6);
+  } catch {
+    document.getElementById("swapToAmount").value = "-";
+  }
+});
+
+/* ========= EXECUTE SWAP ========= */
+document.getElementById("swapBtn").onclick = async () => {
+  if (!tronWeb || !userAddress) {
+    alert("Connect TronLink first");
+    return;
+  }
+
+  const amt = Number(document.getElementById("swapFromAmount").value);
+  if (amt <= 0) return;
+
+  const from = document.getElementById("swapFromToken").value;
+  const path =
+    from === "USDT" ? [USDT, AEC] : [AEC, USDT];
+
+  const tokenIn = await tronWeb.contract().at(path[0]);
+  const router  = await tronWeb.contract().at(SUNSWAP_ROUTER);
+
+  const amountIn = Math.floor(amt * 1e6);
+
+  try {
+    document.getElementById("swapStatus").innerText = "Approving...";
+
+    await tokenIn.approve(SUNSWAP_ROUTER, amountIn).send();
+
+    document.getElementById("swapStatus").innerText = "Swapping...";
+
+    await router.swapExactTokensForTokens(
+      amountIn,
+      0,
+      path,
+      userAddress,
+      Math.floor(Date.now() / 1000) + 600
+    ).send();
+
+    document.getElementById("swapStatus").innerText = "✅ Swap successful";
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("swapStatus").innerText =
+      "❌ Swap failed or cancelled";
+  }
+};
+
 
 
 
