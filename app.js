@@ -252,6 +252,8 @@ swapToToken.onchange = estimateSwap;
 
 year.innerText = new Date().getFullYear();
 
+});
+
 
 /* =========================================
    COINGECKO TOP 100 ALTCOIN TICKER
@@ -486,6 +488,7 @@ document.getElementById("swapBtn").onclick = async () => {
       "❌ Swap failed or cancelled";
   }
 };
+
 
 
 
