@@ -5,15 +5,22 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  /* ================= CONFIG ================= */
-  const AEC_CONTRACT   = "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL";
-  const USDT_CONTRACT  = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-  const SUNSWAP_ROUTER = "TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax";
+  /* ================= CONFIG (SUNSWAP V3) ================= */
 
-  const DECIMALS = 6;
+const AEC = "TNKPo4vCEARpZQHb9YCYKDjTvZWxNrf5mL";
+const USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
-  let tronWeb = null;
-  let userAddress = null;
+// 🔥 SunSwap V3 Contracts
+const SWAP_ROUTER_V3 = "TQAvWQ6B1rA6jv8m9ZB7pGgXJ7KcR8r5p";
+const QUOTER_V3      = "TQx8nE8d9g7B7ZgFJpP1zFZQzPZk7Y1gK";
+
+// ⚙️ Fee tier (HARUS sama dengan pool kamu)
+const FEE_TIER = 3000; // 0.3%
+
+const DECIMALS = 6;
+
+let tronWeb = null;
+let userAddress = null;
 
   /* ================= ELEMENTS ================= */
   const connectBtn     = document.getElementById("connectBtn");
@@ -488,6 +495,7 @@ document.getElementById("swapBtn").onclick = async () => {
       "❌ Swap failed or cancelled";
   }
 };
+
 
 
 
